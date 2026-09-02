@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+server.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build
+build/
+.gradle/
+local.properties
+*.apk
+*.aab
+
+# Cache
+__pycache__/
+*.pyc
+.cache/
+
+# Temporary
+_tmp/
+*.tmp
