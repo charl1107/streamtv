@@ -1,16 +1,19 @@
 package com.streamtv.ui.screens
 
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import androidx.activity.ComponentActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.streamtv.R
 
-class PlayerActivity : AppCompatActivity() {
+class PlayerActivity : ComponentActivity() {
 
     private var player: ExoPlayer? = null
 
@@ -22,7 +25,6 @@ class PlayerActivity : AppCompatActivity() {
             finish()
             return
         }
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: ""
 
         val playerView = findViewById<PlayerView>(R.id.player_view)
         playerView.useController = true
@@ -40,30 +42,33 @@ class PlayerActivity : AppCompatActivity() {
                 exoPlayer.addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         when (playbackState) {
-                            Player.STATE_READY -> {
-                                // Video is playing
-                            }
-                            Player.STATE_ENDED -> {
-                                finish()
-                            }
+                            Player.STATE_ENDED -> finish()
                         }
                     }
                 })
             }
 
-        // Hide system UI for immersive experience
         hideSystemUi()
     }
 
     private fun hideSystemUi() {
-        window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.systemBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            )
+        }
     }
 
     override fun onPause() {

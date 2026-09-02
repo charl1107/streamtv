@@ -1,6 +1,7 @@
 package com.streamtv
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -62,7 +63,7 @@ fun StreamTvNavHost(
             HomeScreen(
                 viewModel = homeViewModel,
                 onContentClick = { contentId, contentType, addonUrl ->
-                    navController.navigate("detail/$contentId/$contentType/$addonUrl")
+                    navController.navigate("detail/$contentId/$contentType/${Uri.encode(addonUrl)}")
                 }
             )
         }
