@@ -1,5 +1,6 @@
 package com.streamtv.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.streamtv.domain.model.CatalogGroup
@@ -8,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+private const val TAG = "HomeViewModel"
 
 data class HomeUiState(
     val isLoading: Boolean = true,
@@ -31,11 +34,13 @@ class HomeViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
                 val groups = getCatalogUseCase()
+                Log.d(TAG, "Loaded ${groups.size} catalog groups")
                 _uiState.value = HomeUiState(
                     isLoading = false,
                     catalogGroups = groups
                 )
             } catch (e: Exception) {
+                Log.e(TAG, "Failed to load catalogs", e)
                 _uiState.value = HomeUiState(
                     isLoading = false,
                     error = e.message ?: "Failed to load catalogs"

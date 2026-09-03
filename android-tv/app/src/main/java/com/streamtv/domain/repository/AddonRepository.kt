@@ -79,27 +79,35 @@ class AddonRepository(
     }
 
     suspend fun getAllCatalogGroups(): List<CatalogGroup> = coroutineScope {
-        // Collect the Flow FIRST, then filter — don't filter on the Flow itself
         val addons = dataStore.addons.first().filter { it.enabled }
 
-        addons.map { addon ->
+        if (addons.isEmpty()) {
+            throw Exception("No addons installed. Go to Addon Store to install one.")
+        }
+
+        val results = addons.map { addon ->
             async {
                 try {
                     val manifest = createApi(addon.url).getManifest().toDomain()
                     if (manifest != null) {
                         getCatalogs(addon.url, manifest)
                     } else {
-                        emptyList()
+                        throw Exception("Cannot reach addon at ${addon.url}")
                     }
                 } catch (e: Exception) {
-                    emptyList()
+                    throw Exception("Cannot connect to ${addon.name} at ${addon.url} — is the server running?")
                 }
             }
-        }.awaitAll().flatten()
+        }.awaitAll()
+
+        val allGroups = results.flatten()
+        if (allGroups.isEmpty()) {
+            throw Exception("Addon returned no catalogs. Check server logs.")
+        }
+        allGroups
     }
 
     suspend fun searchAll(query: String): List<CatalogItem> = coroutineScope {
-        // Collect the Flow FIRST, then filter — don't filter on the Flow itself
         val addons = dataStore.addons.first().filter { it.enabled }
 
         addons.map { addon ->
