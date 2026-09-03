@@ -8,7 +8,6 @@
     <androidx.media3.ui.PlayerView
         android:id="@+id/player_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:useController="true" />
+        android:layout_height="match_parent" />
 
 </FrameLayout>
