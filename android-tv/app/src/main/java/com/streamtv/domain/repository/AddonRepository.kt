@@ -1,5 +1,6 @@
 package com.streamtv.domain.repository
 
+import android.util.Log
 import com.streamtv.data.api.AddonApi
 import com.streamtv.data.api.AddonApiClient
 import com.streamtv.data.local.AddonDataStore
@@ -9,6 +10,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
+
+private const val TAG = "AddonRepository"
+private const val FALLBACK_URL = "http://10.0.2.2:7000"
 
 class AddonRepository(
     private val dataStore: AddonDataStore
@@ -79,10 +83,19 @@ class AddonRepository(
     }
 
     suspend fun getAllCatalogGroups(): List<CatalogGroup> = coroutineScope {
-        val addons = dataStore.addons.first().filter { it.enabled }
+        var addons = dataStore.addons.first().filter { it.enabled }
 
+        // Fallback: if DataStore is empty, try the hardcoded URL directly
         if (addons.isEmpty()) {
-            throw Exception("No addons installed. Go to Addon Store to install one.")
+            Log.w(TAG, "No addons in DataStore, trying fallback URL: $FALLBACK_URL")
+            addons = listOf(
+                com.streamtv.data.local.StoredAddon(
+                    id = "fallback",
+                    name = "School Anime Project",
+                    url = FALLBACK_URL,
+                    enabled = true
+                )
+            )
         }
 
         val results = addons.map { addon ->
@@ -90,11 +103,13 @@ class AddonRepository(
                 try {
                     val manifest = createApi(addon.url).getManifest().toDomain()
                     if (manifest != null) {
+                        Log.d(TAG, "Got manifest from ${addon.url}: ${manifest.name}")
                         getCatalogs(addon.url, manifest)
                     } else {
                         throw Exception("Cannot reach addon at ${addon.url}")
                     }
                 } catch (e: Exception) {
+                    Log.e(TAG, "Failed to fetch from ${addon.url}: ${e.message}")
                     throw Exception("Cannot connect to ${addon.name} at ${addon.url} — is the server running?")
                 }
             }

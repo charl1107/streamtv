@@ -1,6 +1,7 @@
 package com.streamtv
 
 import android.app.Application
+import android.util.Log
 import com.streamtv.di.appModule
 import com.streamtv.data.local.AddonDataStore
 import kotlinx.coroutines.CoroutineScope
@@ -11,6 +12,8 @@ import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+
+private const val TAG = "StreamTvApp"
 
 class StreamTvApplication : Application() {
 
@@ -25,8 +28,21 @@ class StreamTvApplication : Application() {
             modules(appModule)
         }
 
-        // Run synchronously so addons exist before HomeViewModel loads
-        runBlocking { installDefaultAddons() }
+        // Install synchronously so addons exist before HomeViewModel loads
+        runBlocking {
+            try {
+                installDefaultAddons()
+                Log.d(TAG, "Default addons installed successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to install default addons", e)
+            }
+        }
+
+        // Verify it worked
+        applicationScope.launch {
+            val addons = dataStore.addons
+            Log.d(TAG, "Addon store has ${addons.size} entries")
+        }
     }
 
     private suspend fun installDefaultAddons() {
